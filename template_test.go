@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"html/template"
 	"io"
+	"io/fs"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -76,3 +77,137 @@ func TestTemplateEmbed(t *testing.T)  {
   body , _ := io.ReadAll(recorder.Result().Body)
   fmt.Println(string(body))
 }
+
+
+//go:embed static
+var staticFiles embed.FS
+
+func TemplateDataStruct(w http.ResponseWriter, r *http.Request)  {
+  t := template.Must(template.ParseFS(templates, "templates/*.html"))
+  t.ExecuteTemplate(w, "name.html", map[string]any{
+    "Title" : "Template Data Struct",
+    "Name" : "Nabiel",
+    "Image" : "static/images/images.jpeg" ,  
+    })
+}
+
+func TestTemplateDatastrucct(t *testing.T)  {
+  request := httptest.NewRequest(http.MethodGet, "http://localhost", nil)
+  recorder := httptest.NewRecorder()
+  TemplateDataStruct(recorder, request)
+  body , _ := io.ReadAll(recorder.Result().Body)
+  fmt.Println(string(body))
+}
+
+func TestTemplateDirStructWithFileServe(t *testing.T) {
+	// Menyajikan file statis dari embed.FS seperti Django static files
+	staticFS, _ := fs.Sub(staticFiles, "static")
+	fsHandler := http.FileServer(http.FS(staticFS))
+	http.Handle("/static/", http.StripPrefix("/static/", fsHandler))
+
+	// Routing utama
+	http.HandleFunc("/", TemplateDataStruct)
+
+	fmt.Println("Server berjalan di http://localhost:8080")
+	http.ListenAndServe(":8080", nil)
+}
+
+
+func TestTemplatesWithFileServeNoListenAndServe(t *testing.T)  {
+  mux := http.NewServeMux()
+  staticFs, _ := fs.Sub(staticFiles, "static")
+  fsHandler := http.FileServer(http.FS(staticFs))
+  mux.Handle("/static", http.StripPrefix("/static/", fsHandler))
+  mux.HandleFunc("/", TemplateDataStruct)
+  server := httptest.NewServer(mux)
+  defer server.Close()
+  resp , err := http.Get(server.URL + "/")
+  if err != nil {
+    t.Fatal(err)
+  }
+  defer resp.Body.Close()
+  body , _ := io.ReadAll(resp.Body)
+  fmt.Println(string(body))
+
+  respStatic , err := http.Get(server.URL + "/static/images/images.jpeg" )
+  if err!= nil {
+    t.Fatal(err)
+  }
+  if respStatic.StatusCode != http.StatusOK{
+    t.Errorf("File static tidak di temukan , status code %d", respStatic.StatusCode)
+  }
+}
+
+func TestTemplatesWithFileServeNoListenAndServe2(t *testing.T)  {
+  mux := http.NewServeMux()
+  
+  // staticFiles
+  staticFs , _ := fs.Sub(staticFiles, "static")
+  fmt.Printf("ini staticFs : %v\n", staticFs)
+  fsHandler := http.FileServer(http.FS(staticFs))
+  mux.Handle("/static", fsHandler)
+  mux.HandleFunc("/", TemplateDataStruct)
+  server := httptest.NewServer(mux)
+  defer server.Close()
+  resp, err := http.Get(server.URL + "/")
+  if err != nil {
+    t.Fatal(err)
+  }
+  defer resp.Body.Close()
+  body , _ := io.ReadAll(resp.Body)
+  fmt.Println(string(body))
+  respStatic, err := http.Get(server.URL + "/static/images/images.jpeg")
+  if err != nil {
+    t.Error(err)
+  }
+  if respStatic.StatusCode != http.StatusOK {
+    t.Errorf("file static tidak di temukan , status code %d", respStatic.StatusCode)
+  }
+}
+
+func TestTemplatesWithFileServeNoListenAndServe3(t *testing.T)  {
+  mux := http.NewServeMux()
+
+  // handle file server
+  staticFs , _ := fs.Sub(staticFiles, "static")
+  fsHandler := http.FileServer(http.FS(staticFs))
+  mux.Handle("/static", fsHandler)
+  
+  mux.HandleFunc("/", TemplateDataStruct)
+  server := httptest.NewServer(mux)
+  defer server.Close()
+  resp, err := http.Get(server.URL + "/")
+  if err != nil {
+    t.Fatal(err)
+  }
+  defer resp.Body.Close()
+  body , _ := io.ReadAll(resp.Body)
+  fmt.Println(string(body))
+  respStatic, err := http.Get(server.URL + "/static/images/images.jpeg")
+  if err != nil {
+    t.Error(err)
+  }
+  if respStatic.StatusCode != http.StatusOK {
+    t.Error(err)
+  }
+}
+
+
+func TestTemplateDirStructWithFileServe2(t *testing.T) {
+  mux := http.NewServeMux()
+
+  staticFs, _ := fs.Sub(staticFiles, "static")
+  fsHandler := http.FileServer(http.FS(staticFs))
+
+  // Gunakan "/static/" agar semua file dalam folder bisa diakses
+  mux.Handle("/static/", http.StripPrefix("/static/", fsHandler))
+
+  server := &http.Server{
+    Addr:    ":8080",
+    Handler: mux,
+  }
+  if err := server.ListenAndServe(); err != nil {
+    panic(err)
+  }
+}
+
