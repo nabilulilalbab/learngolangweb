@@ -4,11 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{.Title}}</title>
-    </head>
+  </head>
   <body>
-    <h1>Hello {{.Name}}</h1>
-    <h2>Addres  {{.Address.Street}}</h2>
-    <h3>Gambar yang tersedia</h3>
-    <<img src="{{.Image}}" width="300" alt="images">  
+    {{if ge .FinalValue 80}}
+       <h1>Good</h1>
+    {{else if ge .FinalValue 60}}
+       <h1>Nice Try</h1>
+    {{else}}
+       <h1>Try Again</h1>
+    {{end}}
   </body>
 </html>

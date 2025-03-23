@@ -3,12 +3,13 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{.Title}}</title>
-    </head>
+    <title>{{.Title}}</title> 
+  </head>
   <body>
+    {{if .Name}}
     <h1>Hello {{.Name}}</h1>
-    <h2>Addres  {{.Address.Street}}</h2>
-    <h3>Gambar yang tersedia</h3>
-    <<img src="{{.Image}}" width="300" alt="images">  
+    {{else}}
+    <h1>Hello Tanpa Nama</h1>
+    {{end}}
   </body>
 </html>
