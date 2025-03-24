@@ -128,3 +128,23 @@ func TestTemplateActionWith(t *testing.T)  {
   fmt.Println(string(body))
 }
 
+
+func TemplateActionLayout(w http.ResponseWriter, r *http.Request)  {
+  t := template.Must(template.ParseFiles("./templates/header.html", "./templates/footer.html", "./templates/layout.html"))
+  t.ExecuteTemplate(w, "layout.html", map[string]any{
+    "Title" : "Template layout",
+    "Name" : "Nabiel",
+  })
+}
+
+
+
+func TestTemplateActionLayout(t *testing.T)  {
+  request := httptest.NewRequest(http.MethodGet, "http://localhost", nil)
+  recorder := httptest.NewRecorder()
+  TemplateActionLayout(recorder, request)
+  body , _ := io.ReadAll(recorder.Result().Body)
+  fmt.Println(string(body))
+}
+
+
