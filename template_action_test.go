@@ -131,7 +131,7 @@ func TestTemplateActionWith(t *testing.T)  {
 
 func TemplateActionLayout(w http.ResponseWriter, r *http.Request)  {
   t := template.Must(template.ParseFiles("./templates/header.html", "./templates/footer.html", "./templates/layout.html"))
-  t.ExecuteTemplate(w, "layout.html", map[string]any{
+  t.ExecuteTemplate(w, "layout", map[string]any{
     "Title" : "Template layout",
     "Name" : "Nabiel",
   })
