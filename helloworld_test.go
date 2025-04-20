@@ -26,7 +26,6 @@ func TestHello(t *testing.T)  {
   if err := http.ListenAndServe(addres, nil); err != nil {
     panic(err)
   }
-
 }
 
 func sayHello(w http.ResponseWriter, r *http.Request)  {
